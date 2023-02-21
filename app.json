@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "iwillanswer",
-    "slug": "iwillanswer",
+    "name": "CortexAI",
+    "slug": "CortexAI",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
