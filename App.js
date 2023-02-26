@@ -1,70 +1,44 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Text, View } from 'react-native';
-import { GiftedChat } from 'react-native-gifted-chat';
+import React from 'react';
+import { Text, TouchableOpacity } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Login from './screens/Login';
+import Register from './screens/Register';
+import ChatScreen from './screens/ChatScreen';
 
-const baseUrl = 'https://ask-me-anything-ehws.onrender.com/';
+
+const Stack = createNativeStackNavigator();
+
 export default function App() {
-  const [messages, setMessages] = useState([]);
-  const [isTyping, setIsTyping] = useState(false);
-
-  const onSend = useCallback(async (messages = []) => {
-    const text = messages[0].text;
-    if (text.toUpperCase() === 'CLEAR') {
-      return setMessages([]);
-    }
-
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, messages),
-    );
-    setIsTyping(true);
-
-    try {
-      const response = await fetch(baseUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ promtData: text }),
-      });
-
-      if (response.status === 200) {
-        const data = await response.json();
-        const parsedData = data?.bot;
-        const updatedData = parsedData.substring(parsedData.indexOf('\n') + 1);
-        console.log(updatedData);
-
-        const newMessage = {
-          _id: data?._id,
-          text: updatedData,
-          createdAt: new Date(),
-          user: {
-            _id: 2,
-            name: 'Cortex-AI',
-            avatar:
-              require('./assets/CortexAI.jpg'),
-          },
-        };
-        setMessages((previousMessages) =>
-          GiftedChat.append(previousMessages, newMessage),
-        );
-      }
-      setIsTyping(false);
-    } catch (error) {
-      alert(error);
-      console.log(error);
-    }
-  }, []);
-
-  return (
-    <GiftedChat
-      messages={messages}
-      onSend={(messages) => onSend(messages)}
-      isTyping={isTyping}
-      placeholder="Ask me anything"
-      scrollToBottom
-      user={{
-        _id: 1,
-      }}
-    />
-  );
+	return (
+			<NavigationContainer>
+				<Stack.Navigator initialRouteName='LoginScreen'>
+				<Stack.Screen
+					name="LoginScreen"
+					component={Login}
+					options={{headerShown: false}}
+				/>
+				<Stack.Screen
+					name="RegisterScreen"
+					component={Register}
+					options={{headerShown: false}}
+				/>
+					<Stack.Screen
+						name="ChatScreen"
+						component={ChatScreen}
+						options={({ navigation }) => ({
+							title: 'Cortex AI',
+							headerStyle: { backgroundColor: '#222f3e' },
+							headerTitleStyle: { color: '#fff' },
+							headerTintColor: '#fff',
+							headerRight: () => (
+								<TouchableOpacity onPress={() => null}>
+									<Text style={{ color: '#fff', marginRight: 10 }}>About</Text>
+								</TouchableOpacity>
+							),
+						})}
+					/>
+				</Stack.Navigator>
+			</NavigationContainer>
+	);
 }
