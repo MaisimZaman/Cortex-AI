@@ -2,13 +2,13 @@ import * as firebase from 'firebase';
 
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAHmjTQQMFeMcx6BoTixLPHZJnTW-59U8g",
-    authDomain: "cortex-ai.firebaseapp.com",
-    projectId: "cortex-ai",
-    storageBucket: "cortex-ai.appspot.com",
-    messagingSenderId: "951829743937",
-    appId: "1:951829743937:web:32fce884473cb3759379c0",
-    measurementId: "G-66XN15D69Q"
+  apiKey: "AIzaSyAHmjTQQMFeMcx6BoTixLPHZJnTW-59U8g",
+  authDomain: "cortex-ai.firebaseapp.com",
+  projectId: "cortex-ai",
+  storageBucket: "cortex-ai.appspot.com",
+  messagingSenderId: "951829743937",
+  appId: "1:951829743937:web:971b73665370248e9379c0",
+  measurementId: "G-ZSY5GN4Q75"
 };
 
 

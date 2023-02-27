@@ -7,6 +7,7 @@ import Message from '../components/Message';
 import { Keyboard } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native';
 import { db, auth } from '../services/firebase';
+import firebase from 'firebase'
 import { SECONDARY_BG } from '../constants/BackgroundImage';
 
 const baseUrl = 'https://ask-me-anything-ehws.onrender.com/';
@@ -16,50 +17,56 @@ export default function ChatScreen() {
   const [myMessages, setMyMessages] = useState([])
   const [isTyping, setIsTyping] = useState(false);
   const [isKeyboardActive, setIsKeyboardActive] = useState(false);
-  const [allMessageChannels, setAllMessageChannels] = useState([])
+  const [docIds, setDocIds] = useState([])
 
   const flatListRef = useRef(null);
 
+ 
+
   useEffect(() => {
-      db.collection('Users')
+    db.collection('UsersChats')
+      .doc(auth.currentUser.uid)
+      .collection('userChat')
+      .orderBy('creation', 'asc')
+      .onSnapshot((snapshot) => setMessages(snapshot.docs.map(doc => ({
+         ...doc.data()
+    }))))
+
+    db.collection('UsersChats')
+      .doc(auth.currentUser.uid)
+      .collection('userChat')
+      .orderBy('creation', 'asc')
+      .onSnapshot((snapshot) => setDocIds(snapshot.docs.map(doc => ({
+         id: doc.id
+    }))))
+
+  
+
+  
+}, [])
+
+useEffect(() => {
+  if (messages.length == 0){
+      
+    db.collection('UsersChats')
         .doc(auth.currentUser.uid)
-        .collection('userChats')
-        .orderBy('creation', 'desc')
-        .onSnapshot((snapshot) => setAllMessageChannels(snapshot.docs.map(doc => ({
-          id: doc.id,
-          data: doc.data()
-      }))))
-
-  if (allMessageChannels != [] && allMessageChannels != undefined && allMessageChannels != null){
-    //setMyMessages(allMessageChannels[0].data.messages)
-    console.log(allMessageChannels)
-  }
-
-   
-    
-  }, [])
-
-  useEffect( () => {
-    if (allMessageChannels == []){
-      db.collection('Users')
-        .doc(auth.currentUser.uid)
-        .collection("userChats")
+        .collection("userChat")
         .add({
           creation: firebase.firestore.FieldValue.serverTimestamp(),
-          messages: messages
+          text: 'Hello, Welcome Back',
+          createdAt: new Date(),
+          user: {
+            _id: 2,
+            name: 'Cortex-AI',
+            avatar: require('../assets/CortexAI.jpg'),
+          },
         })
-    } else if (allMessageChannels[0] != undefined) {
-      db.collection('Users')
-        .doc(auth.currentUser.uid)
-        .collection("userChats")
-        .doc(allMessageChannels[0].id)
-        .update({
-          creation: firebase.firestore.FieldValue.serverTimestamp(),
-          messages: messages
-        })
-    }
         
-},[messages])
+  }
+}, [])
+
+
+
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -84,7 +91,8 @@ export default function ChatScreen() {
           paddingBottom: 35,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: '#222f3e',
+          backgroundColor: '#141617',
+         
       },
       inputMessage: {
           flex: 1,
@@ -139,27 +147,52 @@ export default function ChatScreen() {
   });
 
   
+  function addNewMessage(text, isCortex){
+    const cortexUser = {
+      _id: 2,
+      name: 'Cortex-AI',
+      avatar: require('../assets/CortexAI.jpg'),
+    }
 
+    const theUser =  {
+      _id:  Math.random() * 1000,
+      name: 'You',
+      avatar:
+        {uri: 'https://www.freedomspromise.org/wp-content/uploads/2020/01/male-silluette.jpg'},
+    }
+
+    db.collection('UsersChats')
+          .doc(auth.currentUser.uid)
+          .collection("userChat")
+          .add({
+            creation: firebase.firestore.FieldValue.serverTimestamp(),
+            text: text,
+            createdAt: new Date(),
+            user: isCortex ? cortexUser : theUser
+          })
+  }
+
+  function deleteTypingMessage(id){
+  
+    db.collection('UsersChats')
+          .doc(auth.currentUser.uid)
+          .collection("userChat")
+          .doc(id)
+          .delete()
+  }
+
+  //console.log(docIds[messages.length-2].id)
+  //console.log(messages[messages.length-2].text)
+
+  //console.log(messages[messages.length-2].text == 'Thinking...')
+
+  
+  //console.log(docIds)
 
   useEffect(() => {
-    setMessages([
-      {
-        _id: 1,
-        text: 'Hello, Can I Help You?',
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: 'Cortex-AI',
-          avatar: require('../assets/CortexAI.jpg'),
-        },
-      },
-    ])
-  }, [])
-
-
-  useEffect(() => {
-    const typingMessage = 'Typing...'
+    const typingMessage = 'Thinking...'
     if (isTyping){
+      //addNewMessage(typingMessage, true)
       setMessages([...messages, 
         {
           _id: 1,
@@ -178,60 +211,15 @@ export default function ChatScreen() {
           var cutMessages = messages
           cutMessages.splice(messages.length-2, 1)
           setMessages(cutMessages)
-        }
+          
+        } 
       }
       
     }
     
   }, [isTyping])
 
-  const onSend = useCallback(async (messages = []) => {
-    const text = messages[0].text;
-    if (text.toUpperCase() === 'CLEAR') {
-      return setMessages([]);
-    }
-
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, messages),
-    );
-    setIsTyping(true);
-
-    try {
-      const response = await fetch(baseUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ promtData: text }),
-      });
-
-      if (response.status === 200) {
-        const data = await response.json();
-        const parsedData = data?.bot;
-        const updatedData = parsedData.substring(parsedData.indexOf('\n') + 1);
-        console.log(updatedData);
-
-        const newMessage = {
-          _id: data?._id,
-          text: updatedData,
-          createdAt: new Date(),
-          user: {
-            _id: 2,
-            name: 'Cortex-AI',
-            avatar:
-              require('../assets/CortexAI.jpg'),
-          },
-        };
-        setMessages((previousMessages) =>
-          GiftedChat.append(previousMessages, newMessage),
-        );
-      }
-      setIsTyping(false);
-    } catch (error) {
-      alert(error);
-      console.log(error);
-    }
-  }, []);
+  
 
   async function generateChatGPTOutput(text){
     setIsTyping(true);
@@ -250,7 +238,7 @@ export default function ChatScreen() {
       };
 
       setMyMessages([...myMessages, myNewMessage])
-      setMessages([...messages, myNewMessage])
+      addNewMessage(text, false)
       const response = await fetch(baseUrl, {
         method: 'POST',
         headers: {
@@ -265,19 +253,8 @@ export default function ChatScreen() {
         const updatedData = parsedData.substring(parsedData.indexOf('\n') + 1);
         console.log(updatedData);
 
-        const newMessage = {
-          _id: data?._id,
-          text: updatedData,
-          createdAt: new Date(),
-          user: {
-            _id: 2,
-            name: 'Cortex-AI',
-            avatar:
-              require('../assets/CortexAI.jpg'),
-          },
-        };
-
-        setMessages([...messages,  myNewMessage, newMessage])
+        
+        addNewMessage(updatedData, true)
 
         
       }
@@ -303,7 +280,7 @@ export default function ChatScreen() {
                 onContentSizeChange={handleContentSizeChange}
                 onLayout={handleContentSizeChange}
 				renderItem={({ item }) => <Message message={item} />}
-				keyExtractor={(item) => item._id.toString()}
+				//keyExtractor={(item) => item._id.toString()}
 				
 			/>
 		</View>

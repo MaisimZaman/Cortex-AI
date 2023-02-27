@@ -9,7 +9,7 @@ const Layout = ({children}) => {
 		<ImageBackground  style={styles.image} source={  SECONDARY_BG}>
 		<View style={styles.container}>
 		<StatusBar 
-			//backgroundColor={'#222f3e'} 
+			backgroundColor={'#222f3e'} 
 			barStyle={'light-content'} />
 			{children}
 		</View>
