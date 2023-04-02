@@ -1,4 +1,4 @@
-import React from 'react';
+import React , { useState, useCallback, useEffect }  from 'react';
 import { Text, TouchableOpacity, Vibration } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -6,9 +6,11 @@ import Login from './screens/Login';
 import Register from './screens/Register';
 import ChatScreen from './screens/ChatScreen';
 import { auth } from './services/firebase';
+import { GiftedChat } from 'react-native-gifted-chat';
 
 
 const Stack = createNativeStackNavigator();
+
 
 export default function App() {
 	function signOutUser(navigation){

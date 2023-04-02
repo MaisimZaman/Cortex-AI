@@ -9,6 +9,7 @@ import { KeyboardAvoidingView } from 'react-native';
 import { db, auth } from '../services/firebase';
 import firebase from 'firebase'
 import { SECONDARY_BG } from '../constants/BackgroundImage';
+import axios from 'axios'
 
 const baseUrl = 'https://ask-me-anything-ehws.onrender.com/';
 export default function ChatScreen() {
@@ -219,7 +220,34 @@ useEffect(() => {
     
   }, [isTyping])
 
-  
+  async function generateAltChatGPTOutput(text){
+    setText('')
+    addNewMessage(text, false)
+    const API_URL = 'https://api.openai.com/v1/completions';
+    const YOUR_API_KEY = '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'; // Chave da API
+    const MAX_TOKENS = 100; // Quantidade de tokens
+
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization:
+                `Bearer ${YOUR_API_KEY}`,
+        },
+        body: JSON.stringify({
+            model: 'text-davinci-003',
+            prompt: text,
+            max_tokens: MAX_TOKENS,
+            temperature: 0,
+        }),
+    });
+
+    const data = await res.json();
+    console.log(text)
+    const result = data.choices[0].text;
+    console.log(result)
+    addNewMessage(result, true)
+  }
 
   async function generateChatGPTOutput(text){
     setIsTyping(true);
@@ -231,6 +259,7 @@ useEffect(() => {
         createdAt: new Date(),
         user: {
           _id:  Math.random() * 1000,
+
           name: 'You',
           avatar:
             {uri: 'https://www.freedomspromise.org/wp-content/uploads/2020/01/male-silluette.jpg'},
@@ -316,7 +345,7 @@ useEffect(() => {
          
         onSubmitEditing={Keyboard.dismiss}
         />
-        <TouchableOpacity disabled={text == ''} style={styles.button} onPress={() => generateChatGPTOutput(text)}>
+        <TouchableOpacity disabled={text == ''} style={styles.button} onPress={() => generateAltChatGPTOutput(text)}>
           <FontAwesome name="send" size={24} color="white" />
         </TouchableOpacity>
       
@@ -329,7 +358,4 @@ useEffect(() => {
   
 
 
-
-  
-}
-
+  }

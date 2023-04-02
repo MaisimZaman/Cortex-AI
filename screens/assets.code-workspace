@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "assets",
+			"path": "../../Free-Music-Soundify--main/assets"
+		},
+		{
+			"name": "Cortex-AI",
+			"path": ".."
+		}
+	],
+	"settings": {}
+}
